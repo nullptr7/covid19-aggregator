@@ -1,4 +1,4 @@
-#Covid 19 Aggregator
+# Covid 19 Aggregator
 
 A backend service which fetches Covid-19 data from different sources, consolidates the result
 and provides most accurate response in terms of total number cases by country
