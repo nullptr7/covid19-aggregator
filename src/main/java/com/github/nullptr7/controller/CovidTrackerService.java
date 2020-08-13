@@ -1,6 +1,13 @@
 package com.github.nullptr7.controller;
 
+import com.github.nullptr7.model.Covid19TrackerData;
 import com.github.nullptr7.model.JohnHopkinsUniversityData;
+import com.github.nullptr7.model.mathdroid.MathDroidCountryData;
+import com.github.nullptr7.model.mathdroid.MathDroidCountryDataWrapper;
+import com.github.nullptr7.model.mathdroid.MathDroidCovidData;
+import com.github.nullptr7.model.mathdroid.MathDroidMasterData;
+import com.github.nullptr7.model.worldometer.WorldOMeterData;
+import com.github.nullptr7.util.Constants;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.client.RxHttpClient;
@@ -8,13 +15,6 @@ import io.reactivex.Flowable;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.github.nullptr7.model.Covid19TrackerData;
-import com.github.nullptr7.model.mathdroid.MathDroidCountryData;
-import com.github.nullptr7.model.mathdroid.MathDroidCountryDataWrapper;
-import com.github.nullptr7.model.mathdroid.MathDroidCovidData;
-import com.github.nullptr7.model.mathdroid.MathDroidMasterData;
-import com.github.nullptr7.model.worldometer.WorldOMeterData;
-import com.github.nullptr7.util.Constants;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -22,15 +22,15 @@ import java.util.Arrays;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
 
+import static com.github.nullptr7.mapper.JHUDToCovid19TrackerDataMapper.FROM_JHUD;
+import static com.github.nullptr7.mapper.MathDroidToCovid19TrackerDataMapper.FROM_MATH_DROID;
+import static com.github.nullptr7.mapper.WorldOMeterToCovid19TrackerDataMapper.FROM_WORLD_O_METER;
 import static hu.akarnokd.rxjava3.bridge.RxJavaBridge.toV3Flowable;
 import static io.micronaut.http.HttpRequest.GET;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ObjectUtils.allNotNull;
-import static com.github.nullptr7.mapper.JHUDToCovid19TrackerDataMapper.FROM_JHUD;
-import static com.github.nullptr7.mapper.MathDroidToCovid19TrackerDataMapper.FROM_MATH_DROID;
-import static com.github.nullptr7.mapper.WorldOMeterToCovid19TrackerDataMapper.FROM_WORLD_O_METER;
 
 
 @Controller("/api/v1/covid-19")
@@ -92,21 +92,21 @@ public class CovidTrackerService {
         final var finalCovid19TrackerData = fromWorldOMeterFlowable.mergeWith(fromMathDroidFlowable)
                                                                    .mergeWith(jHUDFlowable);
 
-        final var map = finalCovid19TrackerData.groupBy(Covid19TrackerData::getCountryName)
-                                               .flatMapSingle(f -> f.collect(() -> singletonMap(f.getKey(), new ArrayList<Covid19TrackerData>()),
-                                                                             (m, i) -> m.get(f.getKey()).add(i)
-                                               ));
+        final var mapGroupedByCountryName = finalCovid19TrackerData.groupBy(Covid19TrackerData::getCountryName)
+                                                                   .flatMapSingle(f -> f.collect(() -> singletonMap(f.getKey(), new ArrayList<Covid19TrackerData>()),
+                                                                                                 (m, i) -> m.get(f.getKey()).add(i)
+                                                                   ));
 
 
-        final Flowable<Covid19TrackerData> data = map.map(each -> each.get(each.keySet()
-                                                                               .stream()
-                                                                               .findFirst()
-                                                                               .orElseGet(defaultStringValue))
-                                                                      .stream()
-                                                                      .reduce(getLatestData))
-                                                     .flatMap(a -> Flowable.just(a.orElseGet(defaultCovidData)));
+        final var trackerDataFlowable = mapGroupedByCountryName.map(each -> each.get(each.keySet()
+                                                                                                   .stream()
+                                                                                                   .findFirst()
+                                                                                                   .orElseGet(defaultStringValue))
+                                                                                          .stream()
+                                                                                          .reduce(getLatestData))
+                                                                         .flatMap(a -> Flowable.just(a.orElseGet(defaultCovidData)));
 
-        return toV3Flowable(data);
+        return toV3Flowable(trackerDataFlowable);
     }
 
     private final Supplier<Covid19TrackerData> defaultCovidData = () -> Covid19TrackerData.builder().build();
