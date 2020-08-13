@@ -99,12 +99,12 @@ public class CovidTrackerService {
 
 
         final var trackerDataFlowable = mapGroupedByCountryName.map(each -> each.get(each.keySet()
-                                                                                                   .stream()
-                                                                                                   .findFirst()
-                                                                                                   .orElseGet(defaultStringValue))
-                                                                                          .stream()
-                                                                                          .reduce(getLatestData))
-                                                                         .flatMap(a -> Flowable.just(a.orElseGet(defaultCovidData)));
+                                                                                         .stream()
+                                                                                         .findFirst()
+                                                                                         .orElseGet(defaultStringValue))
+                                                                                .stream()
+                                                                                .reduce(getLatestData))
+                                                               .flatMap(a -> Flowable.just(a.orElseGet(defaultCovidData)));
 
         return toV3Flowable(trackerDataFlowable);
     }
