@@ -1,4 +1,4 @@
-package com.github.nullptr7.model;
+package com.github.nullptr7.model.johnhopkins;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

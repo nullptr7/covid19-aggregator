@@ -1,7 +1,7 @@
 package com.github.nullptr7.mapper;
 
-import com.github.nullptr7.model.JohnHopkinsUniversityData;
 import com.github.nullptr7.model.Covid19TrackerData;
+import com.github.nullptr7.model.johnhopkins.JohnHopkinsUniversityData;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;

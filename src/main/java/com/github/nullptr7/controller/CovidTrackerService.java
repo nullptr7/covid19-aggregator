@@ -1,7 +1,7 @@
 package com.github.nullptr7.controller;
 
 import com.github.nullptr7.model.Covid19TrackerData;
-import com.github.nullptr7.model.JohnHopkinsUniversityData;
+import com.github.nullptr7.model.johnhopkins.JohnHopkinsUniversityData;
 import com.github.nullptr7.model.mathdroid.MathDroidCountryData;
 import com.github.nullptr7.model.mathdroid.MathDroidCountryDataWrapper;
 import com.github.nullptr7.model.mathdroid.MathDroidCovidData;
@@ -32,7 +32,19 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ObjectUtils.allNotNull;
 
-
+/**
+ * Controller class created exposing the endpoint for all the covid 19 cases across the world. The service consolidates the response received from<br>
+ * <b>1. WorldOMeter</b><br>
+ * <b>2. MathDroid</b><br>
+ * <b>3. John Hopkins University</b><br><br>
+ *
+ * <p>
+ * Currently the api fetching the most number of total cases is taken into consideration.
+ * This will return a Flowable response of {@link Covid19TrackerData} model object(s)
+ * </p>
+ *
+ * @author Ishan
+ */
 @Controller("/api/v1/covid-19")
 public class CovidTrackerService {
 
@@ -73,15 +85,7 @@ public class CovidTrackerService {
                                                    .stream()
                                                    .map(jHUD -> jHUD.stream()
                                                                     .reduce(consolidateDataByCountry)
-                                                                    .orElseGet(() -> JohnHopkinsUniversityData.builder()
-                                                                                                              .confirmed(0L)
-                                                                                                              .deaths(0L)
-                                                                                                              .recovered(0L)
-                                                                                                              .latitude(0.0)
-                                                                                                              .longitude(0.0)
-                                                                                                              .countryName("")
-                                                                                                              .province("")
-                                                                                                              .build()))
+                                                                    .orElseGet(defaultJHUD))
                                                    .collect(toList());
 
 
@@ -110,6 +114,16 @@ public class CovidTrackerService {
     }
 
     private final Supplier<Covid19TrackerData> defaultCovidData = () -> Covid19TrackerData.builder().build();
+
+    private final Supplier<JohnHopkinsUniversityData> defaultJHUD = () -> JohnHopkinsUniversityData.builder()
+                                                                                                   .confirmed(0L)
+                                                                                                   .deaths(0L)
+                                                                                                   .recovered(0L)
+                                                                                                   .latitude(0.0)
+                                                                                                   .longitude(0.0)
+                                                                                                   .countryName("")
+                                                                                                   .province("")
+                                                                                                   .build();
 
     private final Supplier<String> defaultStringValue = () -> "";
 
