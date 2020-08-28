@@ -79,8 +79,6 @@ public class CovidTrackerService {
         final var mapByCountryNames = jhUDList.stream()
                                               .collect(groupingBy(JohnHopkinsUniversityData::getCountryName));
 
-        //System.out.println("mapByCountryNames.values() = " + mapByCountryNames.values());
-
         final var finalJHUDList = mapByCountryNames.values()
                                                    .stream()
                                                    .map(jHUD -> jHUD.stream()
@@ -98,7 +96,8 @@ public class CovidTrackerService {
 
         final var mapGroupedByCountryName = finalCovid19TrackerData.groupBy(Covid19TrackerData::getCountryName)
                                                                    .flatMapSingle(f -> f.collect(() -> singletonMap(f.getKey(), new ArrayList<Covid19TrackerData>()),
-                                                                                                 (m, i) -> m.get(f.getKey()).add(i)
+                                                                                                 (m, i) -> m.get(f.getKey())
+                                                                                                            .add(i)
                                                                    ));
 
 
@@ -113,7 +112,8 @@ public class CovidTrackerService {
         return toV3Flowable(trackerDataFlowable);
     }
 
-    private final Supplier<Covid19TrackerData> defaultCovidData = () -> Covid19TrackerData.builder().build();
+    private final Supplier<Covid19TrackerData> defaultCovidData = () -> Covid19TrackerData.builder()
+                                                                                          .build();
 
     private final Supplier<JohnHopkinsUniversityData> defaultJHUD = () -> JohnHopkinsUniversityData.builder()
                                                                                                    .confirmed(0L)
@@ -131,7 +131,8 @@ public class CovidTrackerService {
 
     private final BinaryOperator<JohnHopkinsUniversityData> consolidateDataByCountry = (data1, data2) -> {
         data1.setProvince(null);
-        if (data1.getCountryName().equalsIgnoreCase(data2.getCountryName())) {
+        if (data1.getCountryName()
+                 .equalsIgnoreCase(data2.getCountryName())) {
             data1.setRecovered(data1.getRecovered() + data2.getRecovered());
             data1.setConfirmed(data1.getConfirmed() + data2.getConfirmed());
             data1.setDeaths(data1.getDeaths() + data2.getDeaths());
